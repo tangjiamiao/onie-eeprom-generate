@@ -45,20 +45,7 @@ class BaseArea():
         self._size = size
         self._isPresent = False 
         self._data = b'\x00' * size
-        self.__dataoffset = 0                  
-    
-    def addChild(self, arrlist):
-        self.childList.append(arrlist)
-        arrlist.offset = self.__dataoffset + arrlist.size
-        self.data = self.data[0 : self.__dataoffset + arrlist.size - 1] + arrlist.data + self.data[self.__dataoffset + arrlist.size : self.size]        
-        self.__dataoffset += arrlist.size  
-        printbinvalue(self.data)
-        
-    def reload(self):        
-        tempdata = ""
-        for it in self.childList:       
-            tempdata += it.data
-        self.data = tempdata
+        self.__dataoffset = 0       
         
     @property
     def childList(self):
@@ -74,7 +61,8 @@ class BaseArea():
      
     @property
     def data(self):
-        return self._data;  
+        return self._data; 
+     
     @property
     def isPresent(self):
         return self._isPresent;    
