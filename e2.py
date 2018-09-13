@@ -84,7 +84,6 @@ class InternalUseArea(BaseArea):
 class ChassisInfoArea(BaseArea):
     pass
 
-
 def getTypeLength(value):        
         a = bitarray(8)
         a.setall(False)
@@ -125,14 +124,13 @@ class BoardInfoArea(BaseArea):
                 
         self.data += chr(0xc1);
         d_print( "self.data:%d"% len(self.data))        
-        d_print( "self.size:%d" % self.size )
-                         
+        d_print( "self.size:%d" % self.size )                         
         for tianchong in range(self.size -len(self.data) -1):
             self.data += INITVALUE
             
         test = 0
         for index in range(len(self.data)):
-            test += ord(self.data[index])    
+            test += ord(self.data[index])   
         
         #checksum
         checksum = 0x100 - (test % 256)
@@ -185,8 +183,11 @@ class BoardInfoArea(BaseArea):
 class ProductInfoArea(BaseArea):
     @property
     def productVersion (self):
-        self._productVersion = COMMON_HEAD_VERSION;
-        return self._productVersion; 
+        return self._productVersion;
+    @property
+    def areaversion (self):
+        self._areaversion = COMMON_HEAD_VERSION;
+        return self._areaversion; 
     @property
     def language(self):        
         self._language = 25;  
@@ -208,7 +209,45 @@ class ProductInfoArea(BaseArea):
         return self._productAssetTag;  
     @property
     def FRUFileID(self):
-        return self._FRUFileID;  
+        return self._FRUFileID;      
+          
+    def recalcute(self):
+        print("product version:%x" % ord(self.areaversion))
+        print("product length:%d" % self.size)
+        print("product language:%x" % self.language)        
+        self.data = chr(ord(self.areaversion)) + chr(self.size/8) + chr(self.language)
+                
+        d_print("product boardManufacturer:%s" % self.productManufacturer)   
+        typelength = getTypeLength(self.productManufacturer);
+        self.data += chr(typelength)
+        self.data += self.productManufacturer
+        
+        self.data += chr(getTypeLength(self.productName))
+        self.data += self.productName
+        
+        self.data += chr(getTypeLength(self.productPartModelName))
+        self.data += self.productPartModelName
+        
+        self.data += chr(getTypeLength(self.productVersion))
+        self.data += self.productVersion  
+           
+        self.data += chr(getTypeLength(self.productAssetTag))
+        self.data += self.productAssetTag    
+                
+        self.data += chr(0xc1);
+        d_print( "self.data:%d"% len(self.data))        
+        d_print( "self.size:%d" % self.size )                         
+        for tianchong in range(self.size -len(self.data) -1):
+            self.data += INITVALUE
+            
+        test = 0
+        for index in range(len(self.data)):
+            test += ord(self.data[index])   
+        
+        #checksum
+        checksum = 0x100 - (test % 256)
+        d_print("board info checksum:%x" % checksum)               
+        self.data += chr(checksum)
     
 class MultiRecordArea(BaseArea):
     pass
@@ -352,6 +391,7 @@ class CommonArea(BaseArea):
             self.bindata += self.BoardInfoArea.data  
         if self.ProductInfoArea.isPresent:
             d_print("ProductInfoArea is present")
+            self.ProductInfoArea.recalcute()
             self.bindata += self.ProductInfoArea.data  
         if self.MultiRecordArea.isPresent:
             d_print("MultiRecordArea is present")
@@ -379,13 +419,25 @@ def initEERPOMTree():
     boardinfoarea = BoardInfoArea(name="Board Info Area", size= SUGGESTED_SIZE_BOARD_INFO_AREA)  
     boardinfoarea.isPresent = True
     
-    boardinfoarea.boardManufacturer = "tjm"
+    boardinfoarea.boardManufacturer = "Alibaba"
     boardinfoarea.boradProductName = "tjm"
     boardinfoarea.boardSerialNumber= "0000000000000"
     boardinfoarea.boardPartNumber= "tjm-100"
-    boardinfoarea.FRUFileID= "md5sum"
-              
+    boardinfoarea.FRUFileID= "md5sum"              
     fru.BoardInfoArea = boardinfoarea
+    
+    
+    productInfoArea = ProductInfoArea(name="Product Info Area ", size= SUGGESTED_SIZE_PRODUCT_INFO_AREA)   
+    productInfoArea.isPresent = True  
+    productInfoArea.productManufacturer="Alibaba"
+    productInfoArea.productName="M1HFANI"
+    productInfoArea.productPartModelName="M1HFANI-F"
+    productInfoArea.productVersion="AA"
+    productInfoArea.productSerialNumber="0000000000000"
+    productInfoArea.productAssetTag="RJ000001"
+    productInfoArea.FRUFileID="md5sum"
+               
+    fru.ProductInfoArea = productInfoArea
     #fru.ProductInfoArea.isPresent = True
     #fru.MultiRecordArea.isPresent = True    
     fru.recalcute()    
