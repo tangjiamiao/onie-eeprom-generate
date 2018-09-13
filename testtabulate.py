@@ -1,8 +1,15 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 '''
-Created on 2018Äê9ÔÂ13ÈÕ
+Created on 2018å¹´9æœˆ13å·
 
 @author: tjm
 '''
+from tabulate import tabulate
 
-if __name__ == '__main__':
+def test():
+    table = [["Sun",696000,1989100000],["Earth",6371,5973.6],["Moon",1737,73.5],["Mars",3390,641.85]]
+    print tabulate(table,tablefmt="rst",numalign="right")
     pass
+if __name__ == '__main__':
+    test()
