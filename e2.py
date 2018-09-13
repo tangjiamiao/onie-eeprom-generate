@@ -178,9 +178,39 @@ class BoardInfoArea(BaseArea):
         return self._boardTime;  
     @property
     def fields(self):
-        return self._fields;  
+        return self._fields; 
+       
 class ProductInfoArea(BaseArea):
-    pass
+    @property
+    def productVersion (self):
+        self._productVersion = COMMON_HEAD_VERSION;
+        return self._productVersion; 
+    @property
+    def language(self):        
+        self._language = 25;  
+        return self._language;
+    @property
+    def productManufacturer(self):
+        return self._productManufacturer;  
+    @property
+    def productName(self):
+        return self._productName;  
+    @property
+    def productPartModelName(self):
+        return self._productPartModelName; 
+    @property
+    def productVersion(self):
+        return self._productVersion;  
+    @property
+    def productSerialNumber(self):
+        return self._productSerialNumber;  
+    @property
+    def productAssetTag(self):
+        return self._productAssetTag;  
+    @property
+    def FRUFileID(self):
+        return self._FRUFileID;  
+    
 class MultiRecordArea(BaseArea):
     pass
 
@@ -310,8 +340,7 @@ class CommonArea(BaseArea):
         
     def recalcutebin(self):
         self.bindata = ""        
-        self.bindata += self.data
-                            
+        self.bindata += self.data                            
         if self.InternalUseArea.isPresent:
             d_print("InternalUseArea is present")
             self.bindata += self.InternalUseArea.data  
@@ -327,10 +356,7 @@ class CommonArea(BaseArea):
             self.bindata += self.ProductInfoArea.data  
         if self.MultiRecordArea.isPresent:
             d_print("MultiRecordArea is present")
-            self.bindata += self.ProductInfoArea.data  
-        
-        #d_print("len:%d" % len(self.bindata))
-        
+            self.bindata += self.ProductInfoArea.data          
         totallen = len(self.bindata)
         if (totallen < 256):
             for left_t in range(0, 256 - totallen):
