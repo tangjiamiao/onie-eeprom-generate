@@ -212,9 +212,9 @@ class ProductInfoArea(BaseArea):
         return self._FRUFileID;      
           
     def recalcute(self):
-        print("product version:%x" % ord(self.areaversion))
-        print("product length:%d" % self.size)
-        print("product language:%x" % self.language)        
+        d_print("product version:%x" % ord(self.areaversion))
+        d_print("product length:%d" % self.size)
+        d_print("product language:%x" % self.language)        
         self.data = chr(ord(self.areaversion)) + chr(self.size/8) + chr(self.language)
                 
         d_print("product boardManufacturer:%s" % self.productManufacturer)   
@@ -226,25 +226,22 @@ class ProductInfoArea(BaseArea):
         self.data += self.productName
         
         self.data += chr(getTypeLength(self.productPartModelName))
-        self.data += self.productPartModelName
+        self.data += self.productPartModelName       
         
         self.data += chr(getTypeLength(self.productVersion))
         self.data += self.productVersion  
-           
+                   
         self.data += chr(getTypeLength(self.productAssetTag))
         self.data += self.productAssetTag    
                 
         self.data += chr(0xc1);
-        d_print( "self.data:%d"% len(self.data))        
+        d_print( "self.data:%d" % len(self.data))        
         d_print( "self.size:%d" % self.size )                         
         for tianchong in range(self.size -len(self.data) -1):
-            self.data += INITVALUE
-            
+            self.data += INITVALUE            
         test = 0
         for index in range(len(self.data)):
-            test += ord(self.data[index])   
-        
-        #checksum
+            test += ord(self.data[index])        
         checksum = 0x100 - (test % 256)
         d_print("board info checksum:%x" % checksum)               
         self.data += chr(checksum)
@@ -252,20 +249,23 @@ class ProductInfoArea(BaseArea):
 class MultiRecordArea(BaseArea):
     pass
 
-class Field():    
+class Field():
     def __init__(self, fieldType = "ASCII", fieldData = ""):
         self.fieldData  = fieldData
         self.fieldType  = fieldType        
+    
     @property
     def data(self):
         return self._data; 
+    
     @property
     def fieldType(self):
         return self._fieldType; 
+    
     @property
     def fieldData(self):
-        return self._fieldData; 
-
+        return self._fieldData;
+    
 class CommonArea(BaseArea):
     def initDefault(self):
         self.version = COMMON_HEAD_VERSION 
@@ -373,8 +373,7 @@ class CommonArea(BaseArea):
         self.zeroCheckSum = 0x100 - ord(self.version) - self.internalUserAreaOffset -self.chassicInfoAreaOffset -self.productinfoAreaOffset \
                             - self.boardInfoAreaOffset -self.multiRecordAreaOffset
         d_print("zerochecksum:%x" % self.zeroCheckSum)        
-        self.data = self.version + chr(self.internalUserAreaOffset) + chr(self.chassicInfoAreaOffset) + chr(self.boardInfoAreaOffset) + chr(self.productinfoAreaOffset) + chr(self.multiRecordAreaOffset) + self.PAD + chr(self.zeroCheckSum);
-            
+        self.data = self.version + chr(self.internalUserAreaOffset) + chr(self.chassicInfoAreaOffset) + chr(self.boardInfoAreaOffset) + chr(self.productinfoAreaOffset) + chr(self.multiRecordAreaOffset) + self.PAD + chr(self.zeroCheckSum);            
         
     def recalcutebin(self):
         self.bindata = ""        
@@ -409,7 +408,7 @@ def printbinvalue(b):
     for i in range(0, len(b)):
         if index % 16 == 0:
             print " "
-        print "%02x "% ord(b[i]),
+        print "%02x " % ord(b[i]),
         index += 1
     print ""       
     
@@ -418,17 +417,16 @@ def initEERPOMTree():
     fru.initDefault()
     boardinfoarea = BoardInfoArea(name="Board Info Area", size= SUGGESTED_SIZE_BOARD_INFO_AREA)  
     boardinfoarea.isPresent = True
-    
+        
     boardinfoarea.boardManufacturer = "Alibaba"
-    boardinfoarea.boradProductName = "tjm"
+    boardinfoarea.boradProductName = "AS13-32H"
     boardinfoarea.boardSerialNumber= "0000000000000"
-    boardinfoarea.boardPartNumber= "tjm-100"
-    boardinfoarea.FRUFileID= "md5sum"              
-    fru.BoardInfoArea = boardinfoarea
-    
+    boardinfoarea.boardPartNumber= "AS13-32H-100"
+    boardinfoarea.FRUFileID= "md5sum"     
     
     productInfoArea = ProductInfoArea(name="Product Info Area ", size= SUGGESTED_SIZE_PRODUCT_INFO_AREA)   
-    productInfoArea.isPresent = True  
+    productInfoArea.isPresent = True 
+
     productInfoArea.productManufacturer="Alibaba"
     productInfoArea.productName="M1HFANI"
     productInfoArea.productPartModelName="M1HFANI-F"
@@ -437,9 +435,12 @@ def initEERPOMTree():
     productInfoArea.productAssetTag="RJ000001"
     productInfoArea.FRUFileID="md5sum"
                
+                          
+    fru.BoardInfoArea = boardinfoarea  
     fru.ProductInfoArea = productInfoArea
     #fru.ProductInfoArea.isPresent = True
-    #fru.MultiRecordArea.isPresent = True    
+    #fru.MultiRecordArea.isPresent = True 
+       
     fru.recalcute()    
     printbinvalue(fru.bindata) 
     write_bin_file("test_ali.bin", fru.bindata)       
