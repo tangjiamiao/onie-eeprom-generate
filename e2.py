@@ -5,21 +5,18 @@ Created on 2018年9月
 @author: tjm
 '''
 
+import click
+
 from bitarray import bitarray
 from datetime import datetime
+import requests
+import ConfigParser
 
 SUGGESTED_SIZE_COMMON_HEADER = 8
 SUGGESTED_SIZE_INTERNAL_USE_AREA = 72
 SUGGESTED_SIZE_CHASSIS_INFO_AREA = 32
 SUGGESTED_SIZE_BOARD_INFO_AREA = 64
 SUGGESTED_SIZE_PRODUCT_INFO_AREA = 80
-
-
-SUGGESTED_SIZE_INTERNAL_USE_AREA_TYPE = 1
-SUGGESTED_SIZE_CHASSIS_INFO_AREA_TYPE = 2
-SUGGESTED_SIZE_BOARD_INFO_AREA_TYPE = 3
-SUGGESTED_SIZE_PRODUCT_INFO_AREA_TYPE = 4
-SUGGESTED_SIZE_MULTI_RECORD_AREA_TYPE = 5
 
 INITVALUE = b'\x00'
 resultvalue = INITVALUE * 256
@@ -124,6 +121,7 @@ class BoardInfoArea(BaseArea):
         checksum = 0x100 - (test % 256)
         d_print("board info checksum:%x" % checksum)               
         self.data += chr(checksum)
+        
     def getMfgDate(self):            
         starttime = datetime(1996,1,1,0,0,0)
         endtime = datetime.now()
@@ -255,6 +253,12 @@ class Field():
         return self._fieldData;
     
 class CommonArea(BaseArea):
+    _internalUserAreaOffset =None
+    _InternalUseArea    = None
+    _ChassisInfoArea   = None
+    _multiRecordArea = None
+    _chassicInfoAreaOffset = None
+    _multiRecordAreaOffset = None
     def initDefault(self):
         self.version = COMMON_HEAD_VERSION 
         self.internalUserAreaOffset = INITVALUE
@@ -276,19 +280,16 @@ class CommonArea(BaseArea):
         self.BoardInfoArea = boardinfoarea
         self.ChassisInfoArea = chassinfoarea  
         self.MultiRecordArea = multiRecordArea        
-        self.recalcute()
-     
+        self.recalcute()     
     @property
     def version(self):
-        return self._version; 
-                
+        return self._version;                 
     @property
     def internalUserAreaOffset(self):        
         return self._internalUserAreaOffset; 
     @property
     def chassicInfoAreaOffset(self):
-        return self._chassicInfoAreaOffset; 
-        
+        return self._chassicInfoAreaOffset;         
     @property
     def productinfoAreaOffset(self):
         return self._productinfoAreaOffset; 
@@ -328,23 +329,23 @@ class CommonArea(BaseArea):
     def recalcuteCommonHead(self):
         self.offset = SUGGESTED_SIZE_COMMON_HEADER
         d_print("before %d" % self.offset)
-        if self.InternalUseArea.isPresent:            
+        if self.InternalUseArea != None and self.InternalUseArea.isPresent:            
             self.internalUserAreaOffset = self.offset/8
             self.offset += SUGGESTED_SIZE_INTERNAL_USE_AREA   
             d_print("InternalUseArea is present offset:%d" % self.offset)            
-        if self.ChassisInfoArea.isPresent:
+        if self.ChassisInfoArea != None and self.ChassisInfoArea.isPresent:
             self.chassicInfoAreaOffset = self.offset/8
             self.offset += SUGGESTED_SIZE_CHASSIS_INFO_AREA 
             d_print("ChassisInfoArea is present offset:%d" % self.offset) 
-        if self.BoardInfoArea.isPresent:
+        if self.BoardInfoArea != None and self.BoardInfoArea.isPresent:
             self.boardInfoAreaOffset = self.offset/8
             self.offset += SUGGESTED_SIZE_BOARD_INFO_AREA
             d_print("BoardInfoArea is present offset:%d" % self.offset) 
-        if self.ProductInfoArea.isPresent:          
+        if self.ProductInfoArea != None and self.ProductInfoArea.isPresent:          
             self.productinfoAreaOffset = self.offset/8
             self.offset += SUGGESTED_SIZE_PRODUCT_INFO_AREA  
             d_print("ProductInfoArea is present offset:%d" % self.offset) 
-        if self.MultiRecordArea.isPresent:
+        if self.MultiRecordArea != None and self.MultiRecordArea.isPresent:
             self.multiRecordAreaOffset = self.offset/8
             d_print("MultiRecordArea is present offset:%d" % self.offset) 
         
@@ -393,9 +394,14 @@ class CommonArea(BaseArea):
         
 def printbinvalue(b):
     index = 0
+    print "     ",
+    for width in range(16):
+        print "%02x " % width,
+    print ""
     for i in range(0, len(b)):
         if index % 16 == 0:
             print " "
+            print " %02x  " % i ,
         print "%02x " % ord(b[i]),
         index += 1
     print ""       
@@ -403,32 +409,31 @@ def printbinvalue(b):
 def initEERPOMTree():    
     fru = CommonArea()
     fru.initDefault()
+    
     boardinfoarea = BoardInfoArea(name="Board Info Area", size= SUGGESTED_SIZE_BOARD_INFO_AREA)  
     boardinfoarea.isPresent = True
         
-    boardinfoarea.boardManufacturer = "Alibaba"
+    boardinfoarea.boardManufacturer= "Alibaba"
     boardinfoarea.boradProductName = "AS13-32H"
     boardinfoarea.boardSerialNumber= "0000000000000"
-    boardinfoarea.boardPartNumber= "AS13-32H-100"
-    boardinfoarea.FRUFileID= "md5sum"     
+    boardinfoarea.boardPartNumber  = "AS13-32H-100"
+    boardinfoarea.FRUFileID        = "md5sum"     
     
     productInfoArea = ProductInfoArea(name="Product Info Area ", size= SUGGESTED_SIZE_PRODUCT_INFO_AREA)   
     productInfoArea.isPresent = True 
 
-    productInfoArea.productManufacturer="Alibaba"
-    productInfoArea.productName="M1HFANI"
+    productInfoArea.productManufacturer ="Alibaba"
+    productInfoArea.productName         ="M1HFANI"
     productInfoArea.productPartModelName="M1HFANI-F"
-    productInfoArea.productVersion="AA"
-    productInfoArea.productSerialNumber="0000000000000"
-    productInfoArea.productAssetTag="RJ000001"
-    productInfoArea.FRUFileID="md5sum"
-               
+    productInfoArea.productVersion      ="AA"
+    productInfoArea.productSerialNumber ="0000000000000"
+    productInfoArea.productAssetTag     ="RJ00000000001"
+    productInfoArea.FRUFileID           ="md5sum"               
                           
     fru.BoardInfoArea = boardinfoarea  
     fru.ProductInfoArea = productInfoArea
     #fru.ProductInfoArea.isPresent = True
-    #fru.MultiRecordArea.isPresent = True 
-       
+    #fru.MultiRecordArea.isPresent = True        
     fru.recalcute()    
     printbinvalue(fru.bindata) 
     write_bin_file("test_ali.bin", fru.bindata)       
@@ -440,9 +445,16 @@ def write_bin_file(filename, _value):
         filep.write(str(x))
     filep.close();
 
+def getRemoteConfig(url):
+    res = requests.get(url)    
+    print res.content 
+    f = open('bin.conf','w')
+    f.write(res.content)
+    return res.text
+
 def main():
     initEERPOMTree()
-
+    
 if __name__ == '__main__':
     main()
     pass
