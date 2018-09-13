@@ -83,15 +83,17 @@ class InternalUseArea(BaseArea):
     pass
 class ChassisInfoArea(BaseArea):
     pass
-class BoardInfoArea(BaseArea):  
-    def getTypeLength(self, value):        
+
+
+def getTypeLength(value):        
         a = bitarray(8)
         a.setall(False)
         a[0:1] =1
         a[1:2] =1
         x = ord(a.tobytes())
-        return  x | len(value)        
-        
+        return  x | len(value)  
+    
+class BoardInfoArea(BaseArea):        
     def recalcute(self):
         d_print("BoardInfoArea version:%x" % ord(self.boardversion))
         d_print("BoardInfoArea length:%d" % self.size)
@@ -105,20 +107,20 @@ class BoardInfoArea(BaseArea):
         self.data += chr((self.mfg_date >> 16 ) & 0xFF)
                 
         d_print("BoardInfoArea boardManufacturer:%s" % self.boardManufacturer)   
-        typelength = self.getTypeLength(self.boardManufacturer);
+        typelength = getTypeLength(self.boardManufacturer);
         self.data += chr(typelength)
         self.data += self.boardManufacturer
         
-        self.data += chr(self.getTypeLength(self.boradProductName))
+        self.data += chr(getTypeLength(self.boradProductName))
         self.data += self.boradProductName
         
-        self.data += chr(self.getTypeLength(self.boardSerialNumber))
+        self.data += chr(getTypeLength(self.boardSerialNumber))
         self.data += self.boardSerialNumber
         
-        self.data += chr(self.getTypeLength(self.boardPartNumber))
+        self.data += chr(getTypeLength(self.boardPartNumber))
         self.data += self.boardPartNumber  
            
-        self.data += chr(self.getTypeLength(self.FRUFileID))
+        self.data += chr(getTypeLength(self.FRUFileID))
         self.data += self.FRUFileID    
                 
         self.data += chr(0xc1);
@@ -198,9 +200,6 @@ class ProductInfoArea(BaseArea):
     @property
     def productPartModelName(self):
         return self._productPartModelName; 
-    @property
-    def productVersion(self):
-        return self._productVersion;  
     @property
     def productSerialNumber(self):
         return self._productSerialNumber;  
