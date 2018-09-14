@@ -39,6 +39,8 @@ PRODUCTINFOAREAPRODUCTASSETTAG = 'productinfoarea.productassettag'
 PRODUCTINFOAREAFRUFILEID = 'productinfoarea.frufileid'   
 __DEBUG__ = "N"
 
+conf = None
+
 
 def e_print(err):
     print("ERROR: " + err)
@@ -93,39 +95,11 @@ class InternalUseArea(BaseArea):
 class ChassisInfoArea(BaseArea):
     pass
 
-
-def decodeLength(value):    
-    a = bitarray(8)
-    a.setall(True)    
-    a[0:1] = 0
-    a[1:2] = 0
-    x = ord(a.tobytes())
-    return x & ord(value)    
-
-
-def getTypeLength(value):        
-    a = bitarray(8)
-    a.setall(False)
-    a[0:1] = 1
-    a[1:2] = 1
-    x = ord(a.tobytes())
-    return  x | len(value)  
-
-
-def minToData():         
-    starttime = datetime(1996, 1, 1, 0, 0, 0)
-    endtime = datetime.now()
-    seconds = (endtime - starttime).total_seconds()
-    mins = seconds / 60
-    m = int(round(mins))
-    return m  
-
     
 class BoardInfoArea(BaseArea):  
 
     def decodedata(self):        
         index = 0
-        templen = 0
         self.areaversion = self.data[index]  # 0
         index += 1
         print "decode length :%d class size:%d" % ((ord(self.data[index]) * 8), self.size)  # 1        
@@ -137,27 +111,27 @@ class BoardInfoArea(BaseArea):
         print "decode getMfgRealData :%s" % self.getMfgRealData() 
         index += 3
         
-        templen = decodeLength(self.data[index])
+        templen = E2Util.decodeLength(self.data[index])
         self.boardManufacturer = self.data[index + 1 : index + templen + 1 ]
         index += templen + 1
         print "decode boardManufacturer:%s" % self.boardManufacturer     
         
-        templen = decodeLength(self.data[index])
+        templen = E2Util.decodeLength(self.data[index])
         self.boradProductName = self.data[index + 1 : index + templen + 1 ]
         index += templen + 1        
         print "decode boradProductName:%s" % self.boradProductName
         
-        templen = decodeLength(self.data[index])
+        templen = E2Util.decodeLength(self.data[index])
         self.boardSerialNumber = self.data[index + 1 : index + templen + 1 ]
         index += templen + 1
         print "decode boardSerialNumber:%s" % self.boardSerialNumber
         
-        templen = decodeLength(self.data[index])
+        templen = E2Util.decodeLength(self.data[index])
         self.boardPartNumber = self.data[index + 1 : index + templen + 1 ]
         index += templen + 1
         print "decode boardPartNumber:%s" % self.boardPartNumber          
         
-        templen = decodeLength(self.data[index])
+        templen = E2Util.decodeLength(self.data[index])
         self.FRUFileID = self.data[index + 1 : index + templen + 1 ]
         index += templen + 1        
         print "decode FRUFileID:%s" % self.FRUFileID
@@ -167,7 +141,7 @@ class BoardInfoArea(BaseArea):
         d_print("BoardInfoArea version:%x" % ord(self.boardversion))
         d_print("BoardInfoArea length:%d" % self.size)
         d_print("BoardInfoArea language:%x" % self.language)  
-        self.mfg_date = minToData() 
+        self.mfg_date = E2Util.minToData() 
         d_print("BoardInfoArea mfg_date:%x" % self.mfg_date)        
         
         self.data = chr(ord(self.boardversion)) + chr(self.size / 8) + chr(self.language)
@@ -177,20 +151,20 @@ class BoardInfoArea(BaseArea):
         self.data += chr((self.mfg_date >> 16) & 0xFF)
                 
         d_print("BoardInfoArea boardManufacturer:%s" % self.boardManufacturer)   
-        typelength = getTypeLength(self.boardManufacturer);
+        typelength = E2Util.getTypeLength(self.boardManufacturer);
         self.data += chr(typelength)
         self.data += self.boardManufacturer
         
-        self.data += chr(getTypeLength(self.boradProductName))
+        self.data += chr(E2Util.getTypeLength(self.boradProductName))
         self.data += self.boradProductName
         
-        self.data += chr(getTypeLength(self.boardSerialNumber))
+        self.data += chr(E2Util.getTypeLength(self.boardSerialNumber))
         self.data += self.boardSerialNumber
         
-        self.data += chr(getTypeLength(self.boardPartNumber))
+        self.data += chr(E2Util.getTypeLength(self.boardPartNumber))
         self.data += self.boardPartNumber  
            
-        self.data += chr(getTypeLength(self.FRUFileID))
+        self.data += chr(E2Util.getTypeLength(self.FRUFileID))
         self.data += self.FRUFileID    
                 
         self.data += chr(0xc1);
@@ -261,44 +235,43 @@ class ProductInfoArea(BaseArea):
     
     def decodedata(self):
         index = 0
-        templen = 0
         self.areaversion = self.data[index]  # 0
         index += 1
         print "decode length %d" % (ord(self.data[index]) * 8)  # 1        
         print "class size %d" % self.size 
         index += 2  # 2 language skip
         
-        templen = decodeLength(self.data[index])
+        templen = E2Util.decodeLength(self.data[index])
         self.productManufacturer = self.data[index + 1 : index + templen + 1 ]
         index += templen + 1
         print "decode productManufacturer:%s" % self.productManufacturer     
         
-        templen = decodeLength(self.data[index])
+        templen = E2Util.decodeLength(self.data[index])
         self.productName = self.data[index + 1 : index + templen + 1 ]
         index += templen + 1        
         print "decode productName:%s" % self.productName
         
-        templen = decodeLength(self.data[index])
+        templen = E2Util.decodeLength(self.data[index])
         self.productPartModelName = self.data[index + 1 : index + templen + 1 ]
         index += templen + 1
         print "decode productPartModelName:%s" % self.productPartModelName
         
-        templen = decodeLength(self.data[index])
+        templen = E2Util.decodeLength(self.data[index])
         self.productVersion = self.data[index + 1 : index + templen + 1 ]
         index += templen + 1
         print "decode productVersion:%s" % self.productVersion
         
-        templen = decodeLength(self.data[index])
+        templen = E2Util.decodeLength(self.data[index])
         self.productSerialNumber = self.data[index + 1 : index + templen + 1 ]
         index += templen + 1
         print "decode productSerialNumber:%s" % self.productSerialNumber
         
-        templen = decodeLength(self.data[index])
+        templen = E2Util.decodeLength(self.data[index])
         self.productAssetTag = self.data[index + 1 : index + templen + 1 ]
         index += templen + 1
         print "decode productAssetTag:%s" % self.productAssetTag
         
-        templen = decodeLength(self.data[index])
+        templen = E2Util.decodeLength(self.data[index])
         self.FRUFileID = self.data[index + 1 : index + templen + 1 ]
         index += templen + 1        
         print "decode FRUFileID:%s" % self.FRUFileID
@@ -348,32 +321,32 @@ class ProductInfoArea(BaseArea):
         self.data = chr(ord(self.areaversion)) + chr(self.size / 8) + chr(self.language)
                 
         d_print("product boardManufacturer:%s" % self.productManufacturer)   
-        typelength = getTypeLength(self.productManufacturer);
+        typelength = E2Util.getTypeLength(self.productManufacturer);
         self.data += chr(typelength)
         self.data += self.productManufacturer        
         d_print("encode productManufacturer:%s" % self.productManufacturer)
         
-        self.data += chr(getTypeLength(self.productName))
+        self.data += chr(E2Util.getTypeLength(self.productName))
         self.data += self.productName
         d_print("encode productName:%s" % self.productName)
         
-        self.data += chr(getTypeLength(self.productPartModelName))
+        self.data += chr(E2Util.getTypeLength(self.productPartModelName))
         self.data += self.productPartModelName       
         d_print("encode productPartModelName:%s" % self.productPartModelName)
         
-        self.data += chr(getTypeLength(self.productVersion))
+        self.data += chr(E2Util.getTypeLength(self.productVersion))
         self.data += self.productVersion  
         d_print("encode productVersion:%s" % self.productVersion)
         
-        self.data += chr(getTypeLength(self.productSerialNumber))
+        self.data += chr(E2Util.getTypeLength(self.productSerialNumber))
         self.data += self.productSerialNumber  
         d_print("encode productSerialNumber:%s" % self.productSerialNumber)
                    
-        self.data += chr(getTypeLength(self.productAssetTag))
+        self.data += chr(E2Util.getTypeLength(self.productAssetTag))
         self.data += self.productAssetTag    
         d_print("encode productAssetTag:%s" % self.productAssetTag)
         
-        self.data += chr(getTypeLength(self.FRUFileID))
+        self.data += chr(E2Util.getTypeLength(self.FRUFileID))
         self.data += self.FRUFileID    
         d_print("encode FRUFileID:%s" % self.FRUFileID)
                 
@@ -412,13 +385,6 @@ class Field():
     def fieldData(self):
         return self._fieldData;
 
-
-def checksum(b):
-    result = 0
-    for i in range(len(b)):
-        result += ord(b[i])
-    return 0x100 - result % 256
-
     
 class CommonArea(BaseArea):
     _internalUserAreaOffset = None
@@ -434,7 +400,7 @@ class CommonArea(BaseArea):
         print("decode version %x" % ord(commonHead[0]))
         if COMMON_HEAD_VERSION != commonHead[0]:
             print "not equal"
-        if checksum(commonHead[0:7]) != ord(commonHead[7]):
+        if E2Util.checksum(commonHead[0:7]) != ord(commonHead[7]):
             print "check sum error"
         if commonHead[1] != INITVALUE:
             d_print("Internal Use Area is present")
@@ -612,6 +578,96 @@ class CommonArea(BaseArea):
 
 class E2Util():
 
+    @staticmethod
+    def loadconfig():
+        global conf
+        conf = E2Config()
+
+    @staticmethod
+    def createFruBin(filename, boardinfoarea , productInfoArea):    
+        fru = CommonArea()
+        fru.initDefault()             
+        
+        if boardinfoarea != None:                      
+            fru.BoardInfoArea = boardinfoarea
+        if productInfoArea != None:  
+            fru.ProductInfoArea = productInfoArea
+        
+        # fru.ProductInfoArea.isPresent = True
+        # fru.MultiRecordArea.isPresent = True
+        fru.recalcute()    
+        # E2Util.printbinvalue(fru.bindata) 
+        E2Util.write_bin_file(filename, fru.bindata) 
+
+    @staticmethod
+    def createpartbin(part):
+        try:
+            boardinfoarea = None
+            productInfoArea = None
+            
+            boradispresent = conf.getProductName(BOARDINFOAREAISPRESETN, part)
+            if (boradispresent == "1"):
+                boardinfoarea = BoardInfoArea(name="Board Info Area",
+                                              size=SUGGESTED_SIZE_BOARD_INFO_AREA)  
+                boardinfoarea.isPresent = True             
+                boardinfoarea.boardManufacturer = conf.getProductName(BOARDINFOAREABOARDMANUFACTURER, part)
+                boardinfoarea.boradProductName = conf.getProductName(BOARDINFOAREABORADPRODUCTNAME, part)
+                boardinfoarea.boardSerialNumber = conf.getProductName(BOARDINFOAREABOARDSERIALNUMBER, part)
+                boardinfoarea.boardPartNumber = conf.getProductName(BOARDINFOAREABOARDPARTNUMBER, part)
+                boardinfoarea.FRUFileID = conf.getProductName(BOARDINFOAREAFRUFILEID, part)
+                        
+            productispresent = conf.getProductName(PRODUCTINFOAREAISPRESENT, part)
+            if (productispresent == "1"):
+                productInfoArea = ProductInfoArea(name="Product Info Area ",
+                                                                  size=SUGGESTED_SIZE_PRODUCT_INFO_AREA)   
+                productInfoArea.isPresent = True
+             
+                productInfoArea.productManufacturer = conf.getProductName(PRODUCTINFOAREAPRODUCTMANUFACTURER, part)
+                productInfoArea.productName = conf.getProductName(PRODUCTINFOAREAPRODUCTNAME, part)
+                productInfoArea.productPartModelName = conf.getProductName(PRODUCTINFOAREAPRODUCTPARTMODELNAME, part)
+                productInfoArea.productVersion = conf.getProductName(PRODUCTINFOAREAPRODUCTVERSION, part)
+                productInfoArea.productSerialNumber = conf.getProductName(PRODUCTINFOAREAPRODUCTSERIALNUMBER, part)
+                productInfoArea.productAssetTag = conf.getProductName(PRODUCTINFOAREAPRODUCTASSETTAG, part)
+                productInfoArea.FRUFileID = conf.getProductName(PRODUCTINFOAREAFRUFILEID, part)
+            filename = conf.getPartBinName(part)
+            E2Util.createFruBin(filename, boardinfoarea, productInfoArea)         
+        except Exception as e:
+            print e
+
+    @staticmethod
+    def checksum(b):
+        result = 0
+        for i in range(len(b)):
+            result += ord(b[i])
+        return 0x100 - result % 256
+
+    @staticmethod
+    def decodeLength(value):    
+        a = bitarray(8)
+        a.setall(True)    
+        a[0:1] = 0
+        a[1:2] = 0
+        x = ord(a.tobytes())
+        return x & ord(value)    
+    
+    @staticmethod
+    def getTypeLength(value):        
+        a = bitarray(8)
+        a.setall(False)
+        a[0:1] = 1
+        a[1:2] = 1
+        x = ord(a.tobytes())
+        return  x | len(value)  
+    
+    @staticmethod
+    def minToData():         
+        starttime = datetime(1996, 1, 1, 0, 0, 0)
+        endtime = datetime.now()
+        seconds = (endtime - starttime).total_seconds()
+        mins = seconds / 60
+        m = int(round(mins))
+        return m  
+
     @staticmethod        
     def printbinvalue(b):
         index = 0
@@ -642,22 +698,6 @@ class E2Util():
         f = open('bin.conf', 'w')
         f.write(res.content)
         return res.text
-
-  
-def createFruBin(filename, boardinfoarea , productInfoArea):    
-    fru = CommonArea()
-    fru.initDefault()             
-    
-    if boardinfoarea != None:                      
-        fru.BoardInfoArea = boardinfoarea
-    if productInfoArea != None:  
-        fru.ProductInfoArea = productInfoArea
-    
-    # fru.ProductInfoArea.isPresent = True
-    # fru.MultiRecordArea.isPresent = True
-    fru.recalcute()    
-    # E2Util.printbinvalue(fru.bindata) 
-    E2Util.write_bin_file(filename, fru.bindata) 
 
 
 class E2Config():
@@ -704,53 +744,10 @@ class E2Config():
     def configparse(self):
         return self._configparse     
 
-             
-conf = None
-
-
-def loadconfig():
-    global conf
-    conf = E2Config()
-
-
-def createpartbin(part):
-    try:
-        boardinfoarea = None
-        productInfoArea = None
-        
-        boradispresent = conf.getProductName(BOARDINFOAREAISPRESETN, part)
-        if (boradispresent == "1"):
-            boardinfoarea = BoardInfoArea(name="Board Info Area",
-                                          size=SUGGESTED_SIZE_BOARD_INFO_AREA)  
-            boardinfoarea.isPresent = True             
-            boardinfoarea.boardManufacturer = conf.getProductName(BOARDINFOAREABOARDMANUFACTURER, part)
-            boardinfoarea.boradProductName = conf.getProductName(BOARDINFOAREABORADPRODUCTNAME, part)
-            boardinfoarea.boardSerialNumber = conf.getProductName(BOARDINFOAREABOARDSERIALNUMBER, part)
-            boardinfoarea.boardPartNumber = conf.getProductName(BOARDINFOAREABOARDPARTNUMBER, part)
-            boardinfoarea.FRUFileID = conf.getProductName(BOARDINFOAREAFRUFILEID, part)
-                    
-        productispresent = conf.getProductName(PRODUCTINFOAREAISPRESENT, part)
-        if (productispresent == "1"):
-            productInfoArea = ProductInfoArea(name="Product Info Area ",
-                                                              size=SUGGESTED_SIZE_PRODUCT_INFO_AREA)   
-            productInfoArea.isPresent = True
-         
-            productInfoArea.productManufacturer = conf.getProductName(PRODUCTINFOAREAPRODUCTMANUFACTURER, part)
-            productInfoArea.productName = conf.getProductName(PRODUCTINFOAREAPRODUCTNAME, part)
-            productInfoArea.productPartModelName = conf.getProductName(PRODUCTINFOAREAPRODUCTPARTMODELNAME, part)
-            productInfoArea.productVersion = conf.getProductName(PRODUCTINFOAREAPRODUCTVERSION, part)
-            productInfoArea.productSerialNumber = conf.getProductName(PRODUCTINFOAREAPRODUCTSERIALNUMBER, part)
-            productInfoArea.productAssetTag = conf.getProductName(PRODUCTINFOAREAPRODUCTASSETTAG, part)
-            productInfoArea.FRUFileID = conf.getProductName(PRODUCTINFOAREAFRUFILEID, part)
-        filename = conf.getPartBinName(part)
-        createFruBin(filename, boardinfoarea, productInfoArea)         
-    except Exception as e:
-        print e
-
 
 def main(arg):
     '''create bin'''        
-    loadconfig();    
+    E2Util.loadconfig();    
     if len(arg) < 1:
         usage();
         sys.exit(1)
@@ -764,8 +761,8 @@ def main(arg):
     if len(productParts) <= 0:
         print "没有配置项"
     for part in productParts:
-        print "生成文件: %s"% conf.getPartBinName(part)        
-        createpartbin(part)    
+        print "生成文件: %s" % conf.getPartBinName(part)        
+        E2Util.createpartbin(part)    
     
 
 def usage():
@@ -774,8 +771,9 @@ def usage():
     print("   userless-product :");
     for card in conf.ProductsTypes:
         print "        %s %s" % (card , conf.getProductName(card));
+
     
 if __name__ == '__main__':   
-    #main(sys.argv[1:])
+    # main(sys.argv[1:])
     main(["1"])
     pass

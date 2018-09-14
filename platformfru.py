@@ -7,7 +7,7 @@ Created on 2018年9月13号
 '''
 import sys
 
-from e2 import *
+from e2 import CommonArea
        
 def usage():
     print("Usage: [platformfru.py eepromfilelocation]");
@@ -17,24 +17,15 @@ def usage():
     print("                       0 : default");
     print("                       1 : change value");
     
-def printbinvalue(b):
-    index = 0
-    print "     ",
-    for width in range(16):
-        print "%02x " % width,
-    print ""
-    for i in range(0, len(b)):
-        if index % 16 == 0:
-            print " "
-            print " %02x  " % i ,
-        print "%02x " % ord(b[i]),
-        index += 1
-    print ""  
 
 def decodeBinName(filename):  
     retval = None  
-    with open(filename, 'r') as fd:
-        retval = fd.read()
+    try:
+        with open(filename, 'r') as fd:
+            retval = fd.read()
+    except Exception as e:
+        print e
+        return 
     fru = CommonArea()
     fru.initDefault()
     fru.decodeBin(retval) 
@@ -45,5 +36,5 @@ if __name__ == '__main__':
     if len(arg) < 1:
         usage();
         sys.exit(1)
-    arg[0] = "xeon_d_c_2_x86cpueeprom.bin"
+    arg[0] = "as13_48f8h_2_x86cpueeprom.bin"
     decodeBinName(arg[0])
