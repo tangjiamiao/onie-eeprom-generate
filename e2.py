@@ -632,6 +632,7 @@ class E2Util():
             filename = conf.getPartBinName(part)
             E2Util.createFruBin(filename, boardinfoarea, productInfoArea)         
         except Exception as e:
+            print "635"
             print e
 
     @staticmethod
@@ -774,6 +775,10 @@ def usage():
 
     
 if __name__ == '__main__':   
-    # main(sys.argv[1:])
+    #main(sys.argv[1:])
     main(["1"])
+    main(["2"])
+    main(["3"])
+    main(["4"])
+    main(["5"])
     pass
