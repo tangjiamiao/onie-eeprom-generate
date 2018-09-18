@@ -14,7 +14,7 @@ import sys
 SUGGESTED_SIZE_COMMON_HEADER = 8
 SUGGESTED_SIZE_INTERNAL_USE_AREA = 72
 SUGGESTED_SIZE_CHASSIS_INFO_AREA = 32
-SUGGESTED_SIZE_BOARD_INFO_AREA = 64
+SUGGESTED_SIZE_BOARD_INFO_AREA = 80
 SUGGESTED_SIZE_PRODUCT_INFO_AREA = 80
 
 INITVALUE = b'\x00'
@@ -102,7 +102,7 @@ class BoardInfoArea(BaseArea):
         index = 0
         self.areaversion = self.data[index]  # 0
         index += 1
-        print "decode length :%d class size:%d" % ((ord(self.data[index]) * 8), self.size)  # 1        
+        d_print( "decode length :%d class size:%d" % ((ord(self.data[index]) * 8), self.size) ) # 1        
         index += 2  # 2 language skip
                
         # mfg time
@@ -237,8 +237,8 @@ class ProductInfoArea(BaseArea):
         index = 0
         self.areaversion = self.data[index]  # 0
         index += 1
-        print "decode length %d" % (ord(self.data[index]) * 8)  # 1        
-        print "class size %d" % self.size 
+        d_print( "decode length %d" % (ord(self.data[index]) * 8) ) # 1        
+        d_print( "class size %d" % self.size) 
         index += 2  # 2 language skip
         
         templen = E2Util.decodeLength(self.data[index])
@@ -781,4 +781,5 @@ if __name__ == '__main__':
     main(["3"])
     main(["4"])
     main(["5"])
+    main(["6"])
     pass
